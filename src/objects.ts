@@ -10,18 +10,27 @@ export function makeBlankQuestion(
     name: string,
     type: QuestionType
 ): Question {
-    return {};
+    return {
+        id,
+        name,
+        type,
+        body: "",
+        expected: "",
+        options: [],
+        points: 1,
+        published: false
+    };
 }
 
 /**
  * Consumes a question and a potential `answer`, and returns whether or not
  * the `answer` is correct. You should check that the `answer` is equal to
  * the `expected`, ignoring capitalization and trimming any whitespace.
- *
- * HINT: Look up the `trim` and `toLowerCase` functions.
  */
 export function isCorrect(question: Question, answer: string): boolean {
-    return false;
+    return (
+        question.expected.trim().toLowerCase() === answer.trim().toLowerCase()
+    );
 }
 
 /**
@@ -31,6 +40,11 @@ export function isCorrect(question: Question, answer: string): boolean {
  * be exactly one of the options.
  */
 export function isValid(question: Question, answer: string): boolean {
+    if (question.type === "short_answer_question") {
+        return true;
+    } else if (question.type === "multiple_choice_question") {
+        return question.options.includes(answer);
+    }
     return false;
 }
 
@@ -41,28 +55,20 @@ export function isValid(question: Question, answer: string): boolean {
  * name "My First Question" would become "9: My First Q".
  */
 export function toShortForm(question: Question): string {
-    return "";
+    return `${question.id}: ${question.name.substring(0, 10)}`;
 }
 
 /**
  * Consumes a question and returns a formatted string representation as follows:
- *  - The first line should be a hash sign, a space, and then the `name`
- *  - The second line should be the `body`
- *  - If the question is a `multiple_choice_question`, then the following lines
- *      need to show each option on its line, preceded by a dash and space.
- *
- * The example below might help, but don't include the border!
- * ----------Example-------------
- * |# Name                      |
- * |The body goes here!         |
- * |- Option 1                  |
- * |- Option 2                  |
- * |- Option 3                  |
- * ------------------------------
- * Check the unit tests for more examples of what this looks like!
  */
 export function toMarkdown(question: Question): string {
-    return "";
+    let markdown = `# ${question.name}\n${question.body}`;
+    if (question.type === "multiple_choice_question") {
+        question.options.forEach((option) => {
+            markdown += `\n- ${option}`;
+        });
+    }
+    return markdown;
 }
 
 /**
@@ -70,46 +76,40 @@ export function toMarkdown(question: Question): string {
  * `newName`.
  */
 export function renameQuestion(question: Question, newName: string): Question {
-    return question;
+    return { ...question, name: newName };
 }
 
 /**
  * Return a new version of the given question, except the `published` field
- * should be inverted. If the question was not published, now it should be
- * published; if it was published, now it should be not published.
+ * should be inverted.
  */
 export function publishQuestion(question: Question): Question {
-    return question;
+    return { ...question, published: !question.published };
 }
 
 /**
  * Create a new question based on the old question, copying over its `body`, `type`,
- * `options`, `expected`, and `points` without changes. The `name` should be copied
- * over as "Copy of ORIGINAL NAME" (e.g., so "Question 1" would become "Copy of Question 1").
- * The `published` field should be reset to false.
+ * `options`, `expected`, and `points` without changes.
  */
 export function duplicateQuestion(id: number, oldQuestion: Question): Question {
-    return oldQuestion;
+    return {
+        ...oldQuestion,
+        id,
+        name: `Copy of ${oldQuestion.name}`,
+        published: false
+    };
 }
 
 /**
  * Return a new version of the given question, with the `newOption` added to
- * the list of existing `options`. Remember that the new Question MUST have
- * its own separate copy of the `options` list, rather than the same reference
- * to the original question's list!
- * Check out the subsection about "Nested Fields" for more information.
+ * the list of existing `options`.
  */
 export function addOption(question: Question, newOption: string): Question {
-    return question;
+    return { ...question, options: [...question.options, newOption] };
 }
 
 /**
  * Consumes an id, name, and two questions, and produces a new question.
- * The new question will use the `body`, `type`, `options`, and `expected` of the
- * `contentQuestion`. The second question will provide the `points`.
- * The `published` status should be set to false.
- * Notice that the second Question is provided as just an object with a `points`
- * field; but the function call would be the same as if it were a `Question` type!
  */
 export function mergeQuestion(
     id: number,
@@ -117,5 +117,11 @@ export function mergeQuestion(
     contentQuestion: Question,
     { points }: { points: number }
 ): Question {
-    return contentQuestion;
+    return {
+        ...contentQuestion,
+        id,
+        name,
+        points,
+        published: false
+    };
 }
